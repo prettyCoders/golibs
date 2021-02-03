@@ -1,4 +1,4 @@
-module gogs.tools.youcaidian.com/lotus-service/lotus-golibs
+module github.com/prettyCoders/golibs
 
 go 1.15
 
