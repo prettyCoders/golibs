@@ -37,7 +37,7 @@ func NewDefaultNamingInstance(name string, port uint64, metadata map[string]stri
 		Weight:    10,
 		Enable:    true,
 		Healthy:   true,
-		Ephemeral: false,
+		Ephemeral: true,
 		Metadata:  metadata,
 	}
 }
