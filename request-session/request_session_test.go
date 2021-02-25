@@ -1,8 +1,10 @@
 package request_session
 
 import (
+	"fmt"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestSetGet(t *testing.T) {
@@ -81,5 +83,44 @@ func BenchmarkDelete(b *testing.B) {
 func BenchmarkGetGoID(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		getGoID()
+	}
+}
+
+func TestSync(t *testing.T) {
+	m := make(map[int]int) //concurrent map writes
+	for i := 0; i < 1000; i++ {
+		i := i
+		go func() {
+			m[i] = i
+		}()
+	}
+	time.Sleep(time.Second * 10)
+	for i := 0; i < 1000000; i++ {
+		i := 0
+		go func() {
+			if m[i] != i {
+				fmt.Printf("key:%v  value:%v\n", i, m[i])
+			}
+		}()
+	}
+}
+
+func TestSync2(t *testing.T) {
+	m := sync.Map{}
+	for i := 0; i < 1000000; i++ {
+		i := i
+		go func() {
+			m.Store(i, i)
+		}()
+	}
+
+	time.Sleep(time.Second * 10)
+	for i := 0; i < 1000000; i++ {
+		i := i
+		go func() {
+			if value, ok := m.Load(i); !ok || value != i {
+				fmt.Printf("key:%v  value:%v\n", i, value)
+			}
+		}()
 	}
 }

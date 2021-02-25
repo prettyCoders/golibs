@@ -1,6 +1,7 @@
 package nacos
 
 import (
+	"errors"
 	"github.com/nacos-group/nacos-sdk-go/vo"
 	"github.com/prettyCoders/golibs/utils"
 	"strconv"
@@ -20,12 +21,19 @@ type (
 
 	//服务间HTTP调用模板
 	HttpTemplate struct {
-		Protocol string            //通信协议
-		Name     string            //服务名
-		Header   map[string]string //header信息
-		Method   string            //请求方法
-		URI      string            //uri
-		ReqBody  interface{}       //请求体
+		Protocol       string            //通信协议
+		Name           string            //服务名
+		Header         map[string]string //header信息
+		Method         string            //请求方法
+		URI            string            //uri
+		ReqBody        interface{}       //请求体
+		CustomLocation *CustomLocation   //自定义服务地址
+	}
+
+	//CustomLocation 自定义服务地址，用于debug模式下，不走nacos，方便本地测试
+	CustomLocation struct {
+		IP   string
+		Port uint64
 	}
 )
 
@@ -43,15 +51,16 @@ func NewDefaultNamingInstance(name string, port uint64, metadata map[string]stri
 }
 
 //NewDefaultHttpTemplate 创建新的默认模版
-func NewDefaultHttpTemplate(name string, uri string, reqBody interface{}) *HttpTemplate {
+func NewDefaultHttpTemplate(name string, uri string, reqBody interface{}, customLocation *CustomLocation) *HttpTemplate {
 	header := make(map[string]string)
 	return &HttpTemplate{
-		Protocol: "http",
-		Name:     name,
-		Header:   header,
-		Method:   "POST",
-		URI:      uri,
-		ReqBody:  reqBody,
+		Protocol:       "http",
+		Name:           name,
+		Header:         header,
+		Method:         "POST",
+		URI:            uri,
+		ReqBody:        reqBody,
+		CustomLocation: customLocation,
 	}
 }
 
@@ -75,13 +84,28 @@ func RegisterInstance(instance *NamingInstance) (bool, error) {
 
 //Call 服务调用
 func Call(template *HttpTemplate) (string, error) {
-	instance, err := namingClient.SelectOneHealthyInstance(
-		vo.SelectOneHealthInstanceParam{ServiceName: template.Name},
-	)
-	if err != nil {
-		return "", err
+	var ip string
+	var port uint64
+	switch Model {
+	case DEBUG:
+		c := template.CustomLocation
+		if c == nil {
+			return "", errors.New("miss custom location")
+		}
+		ip = template.CustomLocation.IP
+		port = template.CustomLocation.Port
+	case RELEASE:
+		instance, err := namingClient.SelectOneHealthyInstance(
+			vo.SelectOneHealthInstanceParam{ServiceName: template.Name},
+		)
+		if err != nil {
+			return "", err
+		}
+		ip = instance.Ip
+		port = instance.Port
 	}
-	url := template.Protocol + "://" + instance.Ip + ":" + strconv.FormatUint(instance.Port, 10) + template.URI
+
+	url := template.Protocol + "://" + ip + ":" + strconv.FormatUint(port, 10) + template.URI
 	return utils.Launch(
 		&utils.Request{
 			Method:      template.Method,

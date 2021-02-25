@@ -11,10 +11,19 @@ import (
 var (
 	namingClient naming_client.INamingClient
 	configClient config_client.IConfigClient
+	Model        NacosModel
+)
+
+type NacosModel string
+
+const (
+	DEBUG   NacosModel = "debug"
+	RELEASE NacosModel = "release"
 )
 
 //Init 初始化nacos客户端配置
-func Init(sc []constant.ServerConfig, cc *constant.ClientConfig) error {
+func Init(model NacosModel, sc []constant.ServerConfig, cc *constant.ClientConfig) error {
+	Model = model
 	//初始化服务发现客户端
 	if c, err := clients.NewNamingClient(
 		vo.NacosClientParam{

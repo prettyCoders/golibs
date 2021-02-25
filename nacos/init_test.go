@@ -19,5 +19,5 @@ func TestInit(t *testing.T) {
 		constant.WithMaxAge(3),
 		constant.WithLogLevel("debug"),
 	)
-	testutil.AssertNil(t, Init(sc, &cc))
+	testutil.AssertNil(t, Init(RELEASE, sc, &cc))
 }
