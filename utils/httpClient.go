@@ -11,7 +11,7 @@ type Request struct {
 	RequestBody interface{}
 }
 
-func Launch(request *Request) (string, error) {
+func Launch(result interface{}, request *Request) error {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
@@ -20,21 +20,22 @@ func Launch(request *Request) (string, error) {
 	for k, v := range request.Header {
 		req.Header.Set(k, v)
 	}
-	if jsonRequestBody, err := json.Marshal(request.RequestBody); err != nil {
-		return "", err
-	} else {
-		req.SetBodyString(string(jsonRequestBody))
+	if request.RequestBody != nil {
+		if jsonRequestBody, err := json.Marshal(request.RequestBody); err != nil {
+			return err
+		} else {
+			req.SetBodyString(string(jsonRequestBody))
+		}
 	}
-
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
 
 	if err := fasthttp.Do(req, resp); err != nil {
-		return "", err
+		return err
 	}
 
 	b := resp.Body()
-	return string(b), nil
+	return json.Unmarshal(b, result)
 }
 
 func PostWithContentType(contentType string, url string, requestBody interface{}) (string, error) {
