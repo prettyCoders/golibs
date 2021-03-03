@@ -6,7 +6,6 @@ import (
 )
 
 type Request struct {
-	Method      string
 	Header      map[string]string
 	Url         string
 	RequestBody interface{}
@@ -21,9 +20,6 @@ func Launch(request *Request) (string, error) {
 	for k, v := range request.Header {
 		req.Header.Set(k, v)
 	}
-	// 默认是application/x-www-form-urlencoded
-	//req.Header.SetContentType(request.ContentType)
-	//req.Header.SetMethod(request.Method)
 	if jsonRequestBody, err := json.Marshal(request.RequestBody); err != nil {
 		return "", err
 	} else {
