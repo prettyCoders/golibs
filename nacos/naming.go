@@ -24,7 +24,6 @@ type (
 		Protocol       string            //通信协议
 		Name           string            //服务名
 		Header         map[string]string //header信息
-		Method         string            //请求方法
 		URI            string            //uri
 		ReqBody        interface{}       //请求体
 		CustomLocation *CustomLocation   //自定义服务地址
@@ -53,11 +52,11 @@ func NewDefaultNamingInstance(name string, port uint64, metadata map[string]stri
 //NewDefaultHttpTemplate 创建新的默认模版
 func NewDefaultHttpTemplate(name string, uri string, reqBody interface{}, customLocation *CustomLocation) *HttpTemplate {
 	header := make(map[string]string)
+	header["method"] = "POST"
 	return &HttpTemplate{
 		Protocol:       "http",
 		Name:           name,
 		Header:         header,
-		Method:         "POST",
 		URI:            uri,
 		ReqBody:        reqBody,
 		CustomLocation: customLocation,
@@ -108,7 +107,6 @@ func Call(template *HttpTemplate) (string, error) {
 	url := template.Protocol + "://" + ip + ":" + strconv.FormatUint(port, 10) + template.URI
 	return utils.Launch(
 		&utils.Request{
-			Method:      template.Method,
 			Header:      template.Header,
 			Url:         url,
 			RequestBody: template.ReqBody,
