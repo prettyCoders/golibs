@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/valyala/fasthttp"
 )
 
@@ -37,7 +38,11 @@ func Launch(result interface{}, request *Request) error {
 	}
 
 	b := resp.Body()
-	return json.Unmarshal(b, result)
+	err := json.Unmarshal(b, result)
+	if err != nil {
+		return fmt.Errorf("err:%s,response:%s", err.Error(), string(b))
+	}
+	return nil
 }
 
 func PostWithContentType(contentType string, url string, requestBody interface{}) (string, error) {
