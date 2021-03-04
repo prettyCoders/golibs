@@ -21,8 +21,9 @@ type (
 
 	//服务间HTTP调用模板
 	HttpTemplate struct {
-		Protocol       string            //通信协议
-		Name           string            //服务名
+		Protocol       string //通信协议
+		Name           string //服务名
+		Method         string
 		Header         map[string]string //header信息
 		URI            string            //uri
 		ReqBody        interface{}       //请求体
@@ -52,10 +53,10 @@ func NewDefaultNamingInstance(name string, port uint64, metadata map[string]stri
 //NewDefaultHttpTemplate 创建新的默认模版
 func NewDefaultHttpTemplate(name string, uri string, reqBody interface{}, customLocation *CustomLocation) *HttpTemplate {
 	header := make(map[string]string)
-	header["method"] = "POST"
 	return &HttpTemplate{
 		Protocol:       "http",
 		Name:           name,
+		Method:         "POST",
 		Header:         header,
 		URI:            uri,
 		ReqBody:        reqBody,
@@ -82,14 +83,14 @@ func RegisterInstance(instance *NamingInstance) (bool, error) {
 }
 
 //Call 服务调用
-func Call(template *HttpTemplate) (string, error) {
+func Call(result interface{}, template *HttpTemplate) error {
 	var ip string
 	var port uint64
 	switch Model {
 	case DEBUG:
 		c := template.CustomLocation
 		if c == nil {
-			return "", errors.New("miss custom location")
+			return errors.New("miss custom location")
 		}
 		ip = template.CustomLocation.IP
 		port = template.CustomLocation.Port
@@ -98,7 +99,7 @@ func Call(template *HttpTemplate) (string, error) {
 			vo.SelectOneHealthInstanceParam{ServiceName: template.Name},
 		)
 		if err != nil {
-			return "", err
+			return err
 		}
 		ip = instance.Ip
 		port = instance.Port
@@ -106,7 +107,9 @@ func Call(template *HttpTemplate) (string, error) {
 
 	url := template.Protocol + "://" + ip + ":" + strconv.FormatUint(port, 10) + template.URI
 	return utils.Launch(
+		result,
 		&utils.Request{
+			Method:      template.Method,
 			Header:      template.Header,
 			Url:         url,
 			RequestBody: template.ReqBody,

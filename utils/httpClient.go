@@ -6,6 +6,7 @@ import (
 )
 
 type Request struct {
+	Method      string
 	Header      map[string]string
 	Url         string
 	RequestBody interface{}
@@ -16,6 +17,7 @@ func Launch(result interface{}, request *Request) error {
 	defer fasthttp.ReleaseRequest(req)
 
 	req.SetRequestURI(request.Url)
+	req.Header.SetMethod(request.Method)
 
 	for k, v := range request.Header {
 		req.Header.Set(k, v)

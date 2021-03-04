@@ -19,12 +19,13 @@ func TestCall(t *testing.T) {
 	TestRegisterInstance(t)
 	c := CustomLocation{IP: "127.0.0.1", Port: 8082}
 	template := NewDefaultHttpTemplate(naming_instance_name, "/", nil, &c)
-	resp, err := Call(template)
+	resp := ""
+	err := Call(resp, template)
 	testutil.AssertEqual(t, resp, "")
 	testutil.AssertNotNil(t, err)
 
 	template = NewDefaultHttpTemplate(naming_instance_name, "/", nil, nil)
-	resp, err = Call(template)
+	err = Call(resp, template)
 	testutil.AssertEqual(t, resp, "")
 	testutil.AssertNotNil(t, err)
 }
